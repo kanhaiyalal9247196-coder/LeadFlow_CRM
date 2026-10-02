@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="LeadFlow CRM — Professional Offline Lead Management System">
+  <meta name="theme-color" content="#2563eb">
+  <title>LeadFlow CRM</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    #boot-loading {
+      position: fixed; inset: 0; background: #0f172a; display: flex;
+      align-items: center; justify-content: center; flex-direction: column;
+      z-index: 9999; color: #fff;
+    }
+    #boot-loading .boot-logo {
+      width: 72px; height: 72px; border-radius: 18px;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem; margin-bottom: 1.25rem;
+    }
+    #boot-loading h1 { font-size: 1.4rem; margin-bottom: 0.5rem; font-family: system-ui, sans-serif; }
+    #boot-loading p { color: #94a3b8; font-size: 0.9rem; font-family: system-ui, sans-serif; }
+    #boot-loading .boot-spinner {
+      width: 28px; height: 28px; border: 3px solid #334155;
+      border-top-color: #3b82f6; border-radius: 50%;
+      animation: bootspin 0.7s linear infinite; margin-top: 1.5rem;
+    }
+    @keyframes bootspin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div id="boot-loading">
+    <div class="boot-logo">📊</div>
+    <h1>LeadFlow CRM</h1>
+    <p id="boot-status">Loading your workspace…</p>
+    <div class="boot-spinner"></div>
+  </div>
+
+  <div id="app"></div>
+
+  <script>
+    // Visible diagnostics so failures never leave a blank screen
+    (function () {
+      function showFatal(title, detail) {
+        var boot = document.getElementById('boot-loading');
+        if (boot) boot.style.display = 'none';
+        var app = document.getElementById('app');
+        if (!app) return;
+        var safe = function (s) {
+          return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        };
+        app.innerHTML =
+          '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#0f172a;padding:20px;font-family:Segoe UI,system-ui,sans-serif">' +
+          '<div style="background:#fff;border-radius:14px;max-width:560px;width:100%;padding:28px">' +
+          '<h1 style="font-size:20px;color:#0f172a;margin-bottom:10px">⚠ ' + safe(title) + '</h1>' +
+          '<pre style="white-space:pre-wrap;word-break:break-word;background:#f1f5f9;padding:12px;border-radius:8px;font-size:12px;color:#b91c1c;max-height:220px;overflow:auto;margin-bottom:14px">' + safe(detail) + '</pre>' +
+          '<p style="font-size:13px;color:#475569;margin-bottom:14px">Common causes: a JavaScript file failed to load (check that the <b>css</b> and <b>js</b> folders sit next to index.html), an old database version, or another tab holds the database lock.</p>' +
+          '<button onclick="location.reload()" style="background:#2563eb;color:#fff;border:0;border-radius:8px;padding:10px 18px;font-weight:600;cursor:pointer;margin-right:8px">Reload</button>' +
+          '<button onclick="(function(){try{indexedDB.deleteDatabase(\'LeadFlowCRM\')}catch(e){};sessionStorage.clear();localStorage.clear();location.reload();})()" style="background:#fff;color:#dc2626;border:1px solid #dc2626;border-radius:8px;padding:10px 18px;font-weight:600;cursor:pointer">Reset Database</button>' +
+          '</div></div>';
+      }
+      window.__leadflowFatal = showFatal;
+      window.addEventListener('error', function (e) {
+        if (window.__leadflowStarted) { console.error(e.error || e.message); return; }
+        var msg = e.message || 'Unknown script error';
+        if (e.filename) msg += '\nFile: ' + e.filename.split('/').pop() + ':' + e.lineno;
+        console.error(e.error || e.message);
+        showFatal('Application Error', msg);
+      });
+      window.addEventListener('unhandledrejection', function (e) {
+        if (window.__leadflowStarted) { console.error('Unhandled rejection:', e.reason); return; }
+        var reason = e.reason && (e.reason.stack || e.reason.message) ? (e.reason.message + '\n' + (e.reason.stack || '')) : e.reason;
+        console.error('Unhandled rejection:', e.reason);
+        showFatal('Startup Problem', reason || 'Unknown promise rejection');
+      });
+      // Watchdog: if nothing renders in 15 seconds, surface help
+      setTimeout(function () {
+        var app = document.getElementById('app');
+        var boot = document.getElementById('boot-loading');
+        var bootVisible = boot && boot.style.display !== 'none';
+        if (bootVisible || !app.innerHTML.trim()) {
+          showFatal('LeadFlow did not start',
+            'The startup screen never completed. This usually means a script file is missing or blocked.\n\n' +
+            'Expected files next to index.html:\n  css/style.css\n  js/db.js, js/app.js (and the other js modules)\n\n' +
+            'If you opened this from a zipped download, extract ALL files first.');
+        }
+      }, 15000);
+    })();
+  </script>
+
+  <!-- Core modules — order matters -->
+  <script src="js/utils.js"></script>
+  <script src="js/db.js"></script>
+  <script src="js/audit.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/permissions.js"></script>
+  <script src="js/notifications.js"></script>
+  <script src="js/attachments.js"></script>
+  <script src="js/leads.js"></script>
+  <script src="js/payments.js"></script>
+  <script src="js/followups.js"></script>
+  <script src="js/reports.js"></script>
+  <script src="js/backup.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
